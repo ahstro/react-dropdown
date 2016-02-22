@@ -11,6 +11,7 @@ class Dropdown extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      multiselect: { [props.value.value]: props.value },
       selected: props.value || { label: props.placeholder || 'Select...', value: '' },
       isOpen: false
     }
@@ -45,9 +46,12 @@ class Dropdown extends React.Component {
   }
 
   setValue(option) {
+    let { multiselect } = this.state
     let newState = {
+      multiselect: Object.assign(multiselect, {
+        [option.value]: multiselect[option.value] ? null : option
+      }),
       selected: option,
-      isOpen: false
     }
     this.fireChangeEvent(newState);
     this.setState(newState);
@@ -62,10 +66,10 @@ class Dropdown extends React.Component {
   renderOption (option) {
     let optionClass = classNames({
       'Dropdown-option': true,
-      'is-selected': option == this.state.selected
+      'is-selected': !!this.state.multiselect[option.value]
     });
 
-    return <div key={option.value} className={optionClass} onMouseDown={this.setValue.bind(this, option)} onClick={this.setValue.bind(this, option)}>{option.label}</div>
+    return <div key={option.value} className={optionClass} onClick={this.setValue.bind(this, option)}>{option.label}</div>
   }
 
   buildMenu() {
@@ -98,7 +102,7 @@ class Dropdown extends React.Component {
 
   render() {
     const { className, controlClassName, menuClassName } = this.props;
-    let value = (<div className='placeholder'>{this.state.selected.label}</div>);
+    let value = Object.keys(this.state.multiselect).map(key => this.state.multiselect[key] && this.state.multiselect[key].label).filter(x => !!x).join(', ');
     let menu = this.state.isOpen ? <div className={menuClassName}>{this.buildMenu()}</div> : null;
 
     let dropdownClass = classNames({

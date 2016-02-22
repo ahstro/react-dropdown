@@ -2,6 +2,8 @@
 
 var _interopRequire = function (obj) { return obj && obj.__esModule ? obj["default"] : obj; };
 
+var _defineProperty = function (obj, key, value) { return Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); };
+
 var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 var _get = function get(object, property, receiver) { var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc && desc.writable) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
@@ -22,6 +24,7 @@ var Dropdown = (function (_React$Component) {
 
     _get(Object.getPrototypeOf(Dropdown.prototype), "constructor", this).call(this, props);
     this.state = {
+      multiselect: _defineProperty({}, props.value.value, props.value),
       selected: props.value || { label: props.placeholder || "Select...", value: "" },
       isOpen: false
     };
@@ -65,10 +68,11 @@ var Dropdown = (function (_React$Component) {
     },
     setValue: {
       value: function setValue(option) {
+        var multiselect = this.state.multiselect;
+
         var newState = {
-          selected: option,
-          isOpen: false
-        };
+          multiselect: Object.assign(multiselect, _defineProperty({}, option.value, multiselect[option.value] ? null : option)),
+          selected: option };
         this.fireChangeEvent(newState);
         this.setState(newState);
       }
@@ -84,12 +88,12 @@ var Dropdown = (function (_React$Component) {
       value: function renderOption(option) {
         var optionClass = classNames({
           "Dropdown-option": true,
-          "is-selected": option == this.state.selected
+          "is-selected": !!this.state.multiselect[option.value]
         });
 
         return React.createElement(
           "div",
-          { key: option.value, className: optionClass, onMouseDown: this.setValue.bind(this, option), onClick: this.setValue.bind(this, option) },
+          { key: option.value, className: optionClass, onClick: this.setValue.bind(this, option) },
           option.label
         );
       }
@@ -138,16 +142,18 @@ var Dropdown = (function (_React$Component) {
     },
     render: {
       value: function render() {
+        var _this = this;
+
         var _props = this.props;
         var className = _props.className;
         var controlClassName = _props.controlClassName;
         var menuClassName = _props.menuClassName;
 
-        var value = React.createElement(
-          "div",
-          { className: "placeholder" },
-          this.state.selected.label
-        );
+        var value = Object.keys(this.state.multiselect).map(function (key) {
+          return _this.state.multiselect[key] && _this.state.multiselect[key].label;
+        }).filter(function (x) {
+          return !!x;
+        }).join(", ");
         var menu = this.state.isOpen ? React.createElement(
           "div",
           { className: menuClassName },
